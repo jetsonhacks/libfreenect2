@@ -80,6 +80,7 @@ __constant__ static float MIN_DEPTH;
 __constant__ static float MAX_DEPTH;
 
 #define sqrt(x) sqrtf(x)
+#define sincos(x, a, b) sincosf(x, a, b)
 #define sin(x) sinf(x)
 #define cos(x) cosf(x)
 #define atan2(a, b) atan2f(a, b)
@@ -106,6 +107,12 @@ static inline __device__ int3 isnan(float3 v)
 static inline __device__ float3 sqrtf(float3 v)
 {
   return make_float3(sqrtf(v.x), sqrtf(v.y), sqrtf(v.z));
+}
+static inline __device__ void sincosf(float3 v, float3 *a, float3 *b)
+{
+  sincosf(v.x, &a->x, &b->x);
+  sincosf(v.y, &a->y, &b->y);
+  sincosf(v.z, &a->z, &b->z);
 }
 static inline __device__ float3 sinf(float3 v)
 {
@@ -168,12 +175,12 @@ static __device__
 float2 processMeasurementTriple(const float ab_multiplier_per_frq, const float p0, const float3 v, int *invalid)
 {
   float3 p0vec = make_float3(p0 + PHASE_IN_RAD0, p0 + PHASE_IN_RAD1, p0 + PHASE_IN_RAD2);
-  float3 p0cos = cos(p0vec);
-  float3 p0sin = sin(-p0vec);
+  float3 p0sin, p0cos;
+  sincos(p0vec, &p0sin, &p0cos);
 
   *invalid = *invalid && any(isequal(v, make_float3(32767.0f)));
 
-  return make_float2(dot(v, p0cos), dot(v, p0sin)) * ab_multiplier_per_frq;
+  return make_float2(dot(v, p0cos), -dot(v, p0sin)) * ab_multiplier_per_frq;
 }
 
 static __global__
