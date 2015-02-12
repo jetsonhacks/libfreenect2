@@ -25,6 +25,14 @@
  */
 
 #include <libfreenect2/rgb_packet_processor.h>
+#include <libfreenect2/threading.h>
+#include <sys/time.h>
+static inline double now()
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec + tv.tv_usec/1e6;
+}
 
 #include <iostream>
 #include <stdexcept>
@@ -105,12 +113,12 @@ public:
 
   void startTiming()
   {
-    //timing_current_start = cv::getTickCount();
+    timing_current_start = now();
   }
 
   void stopTiming()
   {
-    //timing_acc += (cv::getTickCount() - timing_current_start) / cv::getTickFrequency();
+    timing_acc += (now() - timing_current_start);
     timing_acc_n += 1.0;
 
     if(timing_acc_n >= 100.0)

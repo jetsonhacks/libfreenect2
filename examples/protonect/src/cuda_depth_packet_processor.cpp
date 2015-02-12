@@ -23,10 +23,16 @@
  * Binary distributions must follow the binary distribution requirements of
  * either License.
  */
-
 #include <libfreenect2/depth_packet_processor.h>
 #include <libfreenect2/resource.h>
 #include <libfreenect2/protocol/response.h>
+#include <sys/time.h>
+static inline double now()
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec + tv.tv_usec/1e6;
+}
 
 #include <iostream>
 #include <fstream>
@@ -105,7 +111,7 @@ public:
 
   bool initDevice(const int deviceId)
   {
-    size_t block_size = 256;
+    size_t block_size = 128;
     try
     {
       kernel.initDevice(deviceId, image_size, block_size);
@@ -146,12 +152,12 @@ public:
 
   void startTiming()
   {
-    //timing_current_start = cv::getTickCount();
+    timing_current_start = now();
   }
 
   void stopTiming()
   {
-    //timing_acc += (cv::getTickCount() - timing_current_start) / cv::getTickFrequency();
+    timing_acc += (now() - timing_current_start);
     timing_acc_n += 1.0;
 
     if(timing_acc_n >= 100.0)
@@ -181,7 +187,7 @@ public:
       const uint16_t *it0 = &p0table->p0table0[r * 512];
       const uint16_t *it1 = &p0table->p0table1[r * 512];
       const uint16_t *it2 = &p0table->p0table2[r * 512];
-      for(int c = 0; c < 512; ++c, it += 4, ++it0, ++it1, ++it2)
+      for(int c = 0; c < 512; ++c, ++it, ++it0, ++it1, ++it2)
       {
         it->x = -((float) * it0) * 0.000031 * M_PI;
         it->y = -((float) * it1) * 0.000031 * M_PI;

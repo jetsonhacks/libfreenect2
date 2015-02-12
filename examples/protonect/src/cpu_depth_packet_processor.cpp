@@ -27,6 +27,13 @@
 #include <libfreenect2/depth_packet_processor.h>
 #include <libfreenect2/resource.h>
 #include <libfreenect2/protocol/response.h>
+#include <sys/time.h>
+static inline double now()
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec + tv.tv_usec/1e6;
+}
 
 #include <iostream>
 #include <fstream>
@@ -243,15 +250,15 @@ public:
 
   void startTiming()
   {
-    //timing_current_start = cv::getTickCount();
+    timing_current_start = now();
   }
 
   void stopTiming()
   {
-    //timing_acc += (cv::getTickCount() - timing_current_start) / cv::getTickFrequency();
+    timing_acc += (now() - timing_current_start);
     timing_acc_n += 1.0;
 
-    if(timing_acc_n >= 100.0)
+    if(timing_acc_n >= 10.0)
     {
       double avg = (timing_acc / timing_acc_n);
       std::cout << "[CpuDepthPacketProcessor] avg. time: " << (avg * 1000) << "ms -> ~" << (1.0/avg) << "Hz" << std::endl;
@@ -887,7 +894,7 @@ void CpuDepthPacketProcessor::process(const DepthPacket &packet)
 {
   if(listener_ == 0) return;
 
-  //impl_->startTiming();
+  impl_->startTiming();
 
   Mat<Vec<float, 9> >
       m(424, 512),
@@ -971,7 +978,7 @@ void CpuDepthPacketProcessor::process(const DepthPacket &packet)
     impl_->newDepthFrame();
   }
 
-  //impl_->stopTiming();
+  impl_->stopTiming();
 }
 
 } /* namespace libfreenect2 */
