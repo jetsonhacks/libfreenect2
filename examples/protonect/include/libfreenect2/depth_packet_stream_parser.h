@@ -66,6 +66,7 @@ private:
   libfreenect2::DoubleBuffer buffer_;
   libfreenect2::Buffer work_buffer_;
 
+  bool started_;
   uint32_t current_sequence_;
   uint32_t current_subsequence_;
 };
